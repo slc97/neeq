@@ -1,0 +1,3 @@
+logging:
+  level:
+    com.neeq.ubsshell.UbsShellApplication: WARN
