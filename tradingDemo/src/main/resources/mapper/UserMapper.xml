@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "com.neeq.tradingDemo.dao.UserMapper">
+    <resultMap id="UserInfoMap" type="com.neeq.tradingDemo.model.User">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="password" property="password"/>
+    </resultMap>
+
+    <select id="getAllUsers" resultMap="UserInfoMap">
+        select
+            id,
+            name,
+            password
+        from
+            user
+    </select>
+
+    <select id="getUserById" resultMap="UserInfoMap" parameterType="Integer">
+        select
+            id,
+            name,
+            password
+        from
+            user
+        where
+            id=#{id}
+    </select>
+
+    <insert id="addUser" parameterType="com.neeq.tradingDemo.model.User">
+        insert into user
+        values(null, #{name},#{password})
+    </insert>
+
+    <delete id="deleteUser" parameterType="Integer">
+        delete from user
+        where id=#{id}
+    </delete>
+
+    <select id="findByUserName" resultMap="UserInfoMap" parameterType="String">
+        select
+               id,
+               name,
+               password
+        from
+             user
+        where
+            name=#{name}
+    </select>
+</mapper>
