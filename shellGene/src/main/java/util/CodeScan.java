@@ -2,6 +2,7 @@ package util;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import entity.Method;
 import entity.Param;
@@ -13,14 +14,51 @@ import javassist.bytecode.annotation.MemberValue;
 
 public class CodeScan {
 
-    public static void dirScan(String path) throws IOException {
+    private static List<TemplateVars> entityList = new ArrayList<>();
+
+    private static final String[] usualTypes = {"Byte", "Short", "Integer", "Long", "Float", "Double", "Boolean", "Character","String"};
+
+    public static List<TemplateVars> dirScan(String path) throws IOException {
         File file = new File(path);
         List<File> files = FileSearchUtils.searchByFileDuff(file, "class");
+        List<TemplateVars> templateVarsList = new ArrayList<>();
+        // 保存扫描的属性信息
         for (File f : files){
-            // 将注解扫描返回的信息提交给java生成方法
             TemplateVars templateVars = getInfo(new FileInputStream(f));
-            FileGenerator.javaGene(templateVars);
+            if(templateVars.isControllerFlag()) {
+                templateVarsList.add(templateVars);
+            }
+            else if(templateVars.isEntityFlag()) {
+                entityList.add(templateVars);
+            }
         }
+
+        // 将templateVarsList中的pojo类替换为基本数据类型封装类
+        for(int i = 0; i < templateVarsList.size(); ++i) {
+            TemplateVars templateVars = templateVarsList.get(i);
+            List<Method> methods = templateVars.getMethods();
+            for(int j = 0; j < methods.size(); ++j) {
+                Method method = methods.get(j);
+                List<Param> params = method.getParams();
+                if(params == null) continue;
+                for (int k = 0; k < params.size(); k++) {
+                    Param param = params.get(k);
+                    if (!Arrays.asList(usualTypes).contains(param.getType())) {
+                        for (TemplateVars entity : entityList) {
+                            if (entity.getEntity().equals(param.getType())) {
+                                params.remove(k);
+                                params.addAll(k, entity.getFields());
+                                method.setParams(params);
+                                methods.set(j,method);
+                                templateVars.setMethods(methods);
+                                templateVarsList.set(i, templateVars);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return templateVarsList;
     }
 
     public static TemplateVars getInfo(InputStream inputStream) throws IOException {
@@ -42,8 +80,10 @@ public class CodeScan {
                 if (annotation.getTypeName().equals("org.springframework.web.bind.annotation.RestController")
                         || annotation.getTypeName().equals("org.springframework.stereotype.Controller")) {
                     flag = 1;
+                    templateVars.setControllerFlag(true);
                 } else if (annotation.getTypeName().equals("io.swagger.annotations.ApiModel")) { // 是否还有其他的方法？
                     flag = 2;
+                    templateVars.setEntityFlag(true);
                 }
             }
         }
@@ -103,16 +143,13 @@ public class CodeScan {
                 MethodParametersAttribute attrName = (MethodParametersAttribute)methodInfo.getAttribute(MethodParametersAttribute.tag);
                 if(attrName != null ) {
                     List<Param> params = new ArrayList<>();
-                    System.out.println("~~~~~~~~~~~~~~~~" + methodInfo.getName() + "~~~~~~~~~~~");
+//                    System.out.println("~~~~~~~~~~~~~~~~" + methodInfo.getName() + "~~~~~~~~~~~");
                     for(int i = 0; i < attrName.size(); ++i) {
                         Param param = new Param();
                         String name = attrName.getConstPool().getUtf8Info(ByteArray.readU16bit(attrName.get(), i * 4 + 1));
                         param.setName(name);
                         // 多个参数的情况下，会出现一些特殊情况
                         // 类中重复出现的参数，只要参数类型和参数名相同，编译时会对其进行优化，即使他们在逻辑上不相同
-//                        while(i > 0 && attrName.getConstPool().getUtf8Info(t-i).equals(params.get(params.size()-i).getName())) {
-//                            t--;
-//                        }
                         int pos = 0;
                         while(pos < attrName.getConstPool().getSize()){
                             try{
@@ -137,7 +174,6 @@ public class CodeScan {
                             }
                         }
                         String type = InfoProcessUtil.paramTypeProcess(attrName.getConstPool().getUtf8Info(pos))[i];
-                        System.out.println(type);
                         param.setType(type);
                         params.add(param);
                     }
@@ -148,25 +184,40 @@ public class CodeScan {
             }
             templateVars.setMethods(methods);
         }
-
         // 实体类
-//        else if(flag == 2) {
-//            System.out.println("-------------------------------------------------------------");
-//            System.out.println("类的名称：" + cls.getName());
-//            //获取属性
-//            List<FieldInfo> fields = cls.getFields();
-//            for (FieldInfo field : fields) {
-//                //获取属性的Runtime注解
-//                AnnotationsAttribute attribute1 = (AnnotationsAttribute) field.getAttribute(AnnotationsAttribute.visibleTag);
-//                if (attribute1 != null) {
-//                    Annotation[] annotations = attribute1.getAnnotations();
-//                    for (Annotation annotation : annotations) {
-//                        System.out.println("属性的名称：" + field.getDescriptor());
-//                        System.out.println("属性的类型： " + annotation.getTypeName());
-//                    }
-//                }
-//            }
-//        }
+        else if(flag == 2) {
+            templateVars.setEntity(cls.getName());
+            // 获取属性
+            List<FieldInfo> fields = cls.getFields();
+            List<Param> params = new ArrayList<>();
+            for (FieldInfo field : fields) {
+                Param param = new Param();
+                param.setName(field.getName());
+                String protoType = field.getDescriptor();
+                if(protoType.equals("B")) {
+                    protoType = "Byte";
+                } else if(protoType.equals("S")) {
+                    protoType = "Short";
+                } else if(protoType.equals("I")) {
+                    protoType = "Integer";
+                } else if(protoType.equals("J")) {
+                    protoType = "Long";
+                } else if(protoType.equals("F")) {
+                    protoType = "Float";
+                } else if(protoType.equals("D")) {
+                    protoType = "Double";
+                } else if(protoType.equals("C")) {
+                    protoType = "Character";
+                } else if(protoType.equals("Z")) {
+                    protoType = "Boolean";
+                } else { // 可能会出现嵌套pojo，建议使用json发送
+                    protoType = InfoProcessUtil.paramTypeProcess(protoType)[0];
+                }
+                param.setType(protoType);
+                params.add(param);
+            }
+            templateVars.setFields(params);
+        }
         return templateVars;
     }
 

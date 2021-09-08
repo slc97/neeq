@@ -1,6 +1,7 @@
 package entity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 生成Shell类的属性
@@ -12,10 +13,17 @@ public class TemplateVars {
     // 包名
     private String pkg = "com.neeq.ubsshell.shelldemo";
 
+    private boolean controllerFlag = false;
+    private boolean entityFlag = false;
+
     // 实体类名，对应可以生成ClassName，ConvertorName
     private String entity;
 
     private String clsUrl;
+
+    private List<Method> methods;
+
+    private List<Param> fields;
 
     public String getPkg() {
         return pkg;
@@ -23,6 +31,22 @@ public class TemplateVars {
 
     public void setPkg(String pkg) {
         this.pkg = pkg;
+    }
+
+    public boolean isControllerFlag() {
+        return controllerFlag;
+    }
+
+    public void setControllerFlag(boolean controllerFlag) {
+        this.controllerFlag = controllerFlag;
+    }
+
+    public boolean isEntityFlag() {
+        return entityFlag;
+    }
+
+    public void setEntityFlag(boolean entityFlag) {
+        this.entityFlag = entityFlag;
     }
 
     public String getEntity() {
@@ -59,13 +83,19 @@ public class TemplateVars {
         this.clsUrl = clsUrl;
     }
 
-    private List<Method> methods;
-
     public List<Method> getMethods() {
         return methods;
     }
 
     public void setMethods(List<Method> methods) {
         this.methods = methods;
+    }
+
+    public List<Param> getFields() {
+        return fields;
+    }
+
+    public void setFields(List<Param> fields) {
+        this.fields = fields;
     }
 }

@@ -1,17 +1,17 @@
-## 包
-###if (!$pkg.empty)
 package $pkg;
-###end
 
-import com.neeq.ubsshell.entity.$entity;
+##import com.neeq.ubsshell.entity.$entity;
+import com.alibaba.fastjson.JSONObject;
 import com.neeq.ubsshell.util.GroupRecordUtil;
-import com.neeq.ubsshell.util.RestTemplateUtil;
+import com.neeq.ubsshell.util.HttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.converter.Converter;
+##import org.springframework.core.convert.converter.Converter;
+##import org.springframework.http.HttpMethod;
 import org.springframework.shell.Availability;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellMethodAvailability;
+import org.springframework.shell.standard.ShellOption;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,32 +19,37 @@ import java.util.Map;
 @ShellComponent
 public class $entityShell {
     @Autowired
-    private RestTemplateUtil restTemplateUtil;
-
+    private HttpUtil httpUtil;
 
 #foreach($method in $methods)
     @ShellMethod(${method.methodDoc})
-    public String ${method.methodName} (#foreach($param in ${method.params})${param.type} ${param.name}#if ($foreach.hasNext), #end#end) {
+    public String ${method.methodName} (#foreach($param in ${method.params})${param.type} ${param.name},#end @ShellOption(defaultValue="{}") String json) {
         Map<String, Object> params = new HashMap<>();
-        #foreach($param in ${method.params})params.put("${param.name}", ${param.name});
-        #end
+        if(!json.equals("{}")) {
+            params = JSONObject.parseObject(json, Map.class);
+##            return httpUtil.jsonExc("$clsUrl${method.url}", HttpMethod.${method.requestMethod.toUpperCase()}, json);
+        } else{
+            #foreach($param in ${method.params})params.put("${param.name}" , ${param.name});
+            #end
 
-        return restTemplateUtil.${method.requestMethod}("$clsUrl${method.url}", params);
+        }
+
+        return httpUtil.${method.requestMethod}("$clsUrl${method.url}#if(${method.params})?#foreach($param in ${method.params})${param.name}={${param.name}}#if($foreach.hasNext)&#end#end#end", params);
     }
 
 #end
 
     @ShellMethodAvailability
-    public Availability DealShellCheck() {
-        return GroupRecordUtil.getGroup().equals("$clsUrl")
+    public Availability ${entity}ShellCheck() {
+        return GroupRecordUtil.getGroup().equals("/ubsShell$clsUrl")
                 ? Availability.available()
                 : Availability.unavailable("no this command");
     }
 }
 
-class $CustomEntityConverter<T> implements Converter<String, $entity> {
-    @Override
-    public $entity convert(String s) {
-        return new $entity(s);
-    }
-}
+##class $CustomEntityConverter<T> implements Converter<String, $entity> {
+##    @Override
+##    public $entity convert(String s) {
+##        return new $entity(s);
+##    }
+##}

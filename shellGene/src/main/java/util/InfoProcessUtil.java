@@ -1,5 +1,6 @@
 package util;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -9,6 +10,8 @@ import java.util.Locale;
  * @date 2021-09-01 09:02
  */
 public class InfoProcessUtil {
+
+    private static final String[] usualTypes = {"Byte", "Short", "Integer", "Long", "Float", "Double", "Boolean", "Character","String"};
 
     /**
      * url处理
@@ -20,9 +23,10 @@ public class InfoProcessUtil {
         String url = protoUrl.replace("{", "").replace("}", "").replace(" ", "").replace("\"", "");
         // 存在多个的url，默认使用第一个
         if(url.contains(",")) {
-            return url.split(",")[0];
+            String result = url.split(",")[0];
+            return result.startsWith("/") ? result : "/"+result;
         }
-        return url;
+        return url.startsWith("/") ? url : "/"+url;
     }
 
 
@@ -47,13 +51,18 @@ public class InfoProcessUtil {
     public static String[] paramTypeProcess(String protoType) {
         String[] types = protoType.split("\\)")[0].split(";");
         for(int i = 0; i < types.length; ++i) {
-            String[] strs = null;
             if (types[i].startsWith("(L")) {
-                strs = types[i].replace("(L", "").split("/");
+                types[i] = types[i].replace("(L", "");
             } else if (types[i].startsWith("L")) {
-                strs = types[i].substring(1).split("/");
+                types[i] = types[i].substring(1);
             }
-            types[i] = strs[strs.length-1];
+            String[] strs = types[i].split("/");
+            if(Arrays.asList(usualTypes).contains(strs[strs.length-1])) {
+                types[i] = strs[strs.length-1];
+            }
+            else {
+                types[i] = types[i].replace("/", ".");
+            }
         }
         return types;
     }
