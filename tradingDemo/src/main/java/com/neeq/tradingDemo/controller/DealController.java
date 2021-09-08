@@ -37,7 +37,7 @@ public class DealController {
     }
 
     @ApiOperation(value = "获取单个成交详细信息", notes = "传入需查看详情的ID", response = Deal.class)
-    @RequestMapping(value="/getDealById", method=RequestMethod.POST)
+    @RequestMapping(value="/getDealById", method=RequestMethod.GET)
     public Deal getDealById(Integer id) {
         System.out.println("调用getdealbyid接口层"+id);
         return dealService.getDealById(id);
@@ -46,7 +46,7 @@ public class DealController {
     @ApiOperation(value = "增加成交", notes = "传入Deal对象")
     @RequestMapping(value="/addDeal", method=RequestMethod.POST)
     @ResponseBody
-    public void addDeal(@RequestBody Deal deal, Integer z) {
+    public void addDeal(@RequestBody Deal deal) {
         System.out.println(deal.toString());
         dealService.addDeal(deal);
     }

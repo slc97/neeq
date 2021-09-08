@@ -11,7 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 public class Deal {
 
     @ApiModelProperty(value = "ID", example = "3")
-    private Integer id;
+    private int id;
 
     @ApiModelProperty(value = "股票ID", example = "2")
     private Integer stockId;
@@ -23,7 +23,7 @@ public class Deal {
     private Double number;
 
     @ApiModelProperty(value = "成交价格", example = "200.0")
-    private Double price;
+    private double price;
 
     public Integer getId() {
         return id;
