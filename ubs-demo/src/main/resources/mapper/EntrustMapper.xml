@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.com.neeq.ubs.demo.mapper.EntrustMapper">
+    <resultMap id="EntrustInfoMap" type="cn.com.neeq.ubs.demo.model.Entrust">
+        <id column="id" property="id"/>
+        <result column="stock_id" property="stockId"/>
+        <result column="number" property="number"/>
+        <result column="price" property="price"/>
+    </resultMap>
+
+    <select id="getAllEntrusts" resultMap="EntrustInfoMap">
+        select
+            id,
+            stock_id,
+            number,
+            price
+        from
+            entrust
+    </select>
+
+    <select id="getEntrustById" resultMap="EntrustInfoMap">
+        select
+            id,
+            stock_id,
+            number,
+            price
+        from
+            entrust
+        where
+            id=#{id}
+    </select>
+
+    <insert id="addEntrust" parameterType="cn.com.neeq.ubs.demo.model.Entrust">
+        insert into entrust
+        values (null, #{stockId}, #{number}, #{price})
+    </insert>
+
+    <delete id="deleteEntrust" parameterType="Integer">
+        delete from entrust
+        where id=#{id}
+    </delete>
+</mapper>

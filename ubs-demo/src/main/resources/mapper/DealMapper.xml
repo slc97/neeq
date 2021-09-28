@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "cn.com.neeq.ubs.demo.mapper.DealMapper">
+    <resultMap id="DealInfoMap" type="cn.com.neeq.ubs.demo.model.Deal">
+        <result column="id" property="id"/>
+        <result column="stock_id" property="stockId"/>
+        <result column="entrust_id" property="entrustId"/>
+        <result column="number" property="number"/>
+        <result column="price" property="price"/>
+    </resultMap>
+
+    <!--<select id = "queryAllUsers" resultMap="UserInfoMap">-->
+    <select id = "getAllDeals" resultMap="DealInfoMap">
+        select
+            id,
+            stock_id,
+            entrust_id,
+            number,
+            price
+        from
+            deal
+    </select>
+
+    <select id="getDealById" resultMap="DealInfoMap" parameterType="Integer">
+        select
+            id,
+            stock_id,
+            entrust_id,
+            number,
+            price
+        from
+            deal
+        where
+            id=#{id}
+    </select>
+
+    <insert id="addDeal" parameterType="cn.com.neeq.ubs.demo.model.Deal">
+        insert into deal
+        values(null, #{stockId}, #{entrustId}, #{number}, #{price})
+    </insert>
+
+    <delete id="deleteDeal" parameterType="Integer">
+        delete from deal
+        where id=#{id}
+    </delete>
+</mapper>
