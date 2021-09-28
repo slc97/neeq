@@ -1,0 +1,44 @@
+package $pkg;
+
+import com.alibaba.fastjson.JSONObject;
+import cn.com.neeq.ubs.shell.util.HttpUtil;
+import cn.com.neeq.ubs.shell.util.GroupRecordUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.shell.Availability;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellMethodAvailability;
+import org.springframework.shell.standard.ShellOption;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@ShellComponent
+public class $entityShell {
+    @Autowired
+    private HttpUtil httpUtil;
+
+#foreach($templateMethod in $templateMethods)
+    @ShellMethod("${templateMethod.methodDoc}")
+    public String ${templateMethod.methodName} (#foreach($templateParam in ${templateMethod.templateParams})${templateParam.type} ${templateParam.name},#end @ShellOption(defaultValue="{}") String json) {
+        Map<String, Object> templateParams = new HashMap<>();
+        if(!json.equals("{}")) {
+            templateParams = JSONObject.parseObject(json, Map.class);
+        } else{
+            #foreach($templateParam in ${templateMethod.templateParams})templateParams.put("${templateParam.name}" , ${templateParam.name});
+            #end
+
+        }
+
+        return httpUtil.${templateMethod.requestMethod}("$clsUrl${templateMethod.url}#if(${templateMethod.templateParams})?#foreach($templateParam in ${templateMethod.templateParams})${templateParam.name}={${templateParam.name}}#if($foreach.hasNext)&#end#end#end", templateParams);
+    }
+
+#end
+
+    @ShellMethodAvailability
+    public Availability ${entity}ShellCheck() {
+        return GroupRecordUtil.getGroup().equals("/ubsShell$clsUrl")
+                ? Availability.available()
+                : Availability.unavailable("no this command");
+    }
+}
